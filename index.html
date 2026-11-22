@@ -494,17 +494,18 @@
         updateClock();
 
         const incidents = [
-            { id: 1, scope: 'TR', type: 'FIRE', name: 'Muğla / Marmaris Kızılçam Ormanı', lat: 36.8550, lon: 28.2740, desc: 'Müdahale sürüyor, helikopter desteği var.', risk: 'Kritik', color: '#EF4444' },
-            { id: 2, scope: 'TR', type: 'FIRE', name: 'Antalya / Manavgat Kırsalı', lat: 36.7867, lon: 31.4422, desc: 'Soğutma tamamlandı, kontrol altında.', risk: 'Orta', color: '#F59E0B' },
+            { id: 1, scope: 'TR', type: 'FIRE', name: 'Muğla / Marmaris Kızılçam Ormanı', lat: 36.8550, lon: 28.2740, desc: 'Müdahale sürüyor, helikopter desteği var.', risk: 'Kritik', color: '#EF4444', daysAgo: 1 },
+            { id: 2, scope: 'TR', type: 'FIRE', name: 'Antalya / Manavgat Kırsalı', lat: 36.7867, lon: 31.4422, desc: 'Soğutma tamamlandı, kontrol altında.', risk: 'Orta', color: '#F59E0B', daysAgo: 3 },
             { id: 3, scope: 'TR', type: 'FLOOD', name: 'Rize / Çamlıhemşin Deresi', lat: 41.0450, lon: 41.0020, desc: 'Dere debisi yükseldi, taşkın alarmı.', risk: 'Kritik', color: '#0284C7' },
             { id: 4, scope: 'TR', type: 'FLOOD', name: 'Giresun / Dereli Deresi', lat: 40.7380, lon: 38.4550, desc: 'Metrekareye 85kg yağış, tahliye yapıldı.', risk: 'Kritik', color: '#0284C7' },
-            { id: 101, scope: 'GLOBAL', type: 'FIRE', name: 'Yunanistan / Rodos Adası', lat: 36.1700, lon: 27.9200, desc: 'Akdeniz sıcak hava dalgası yangını körüklüyor.', risk: 'Kritik', color: '#EF4444' },
-            { id: 102, scope: 'GLOBAL', type: 'FIRE', name: 'ABD / Kaliforniya Sierra Nevada', lat: 37.8651, lon: -119.5383, desc: '12.000 dönüm ormanlık alan etkilendi.', risk: 'Kritik', color: '#EF4444' },
+            { id: 101, scope: 'GLOBAL', type: 'FIRE', name: 'Yunanistan / Rodos Adası', lat: 36.1700, lon: 27.9200, desc: 'Akdeniz sıcak hava dalgası yangını körüklüyor.', risk: 'Kritik', color: '#EF4444', daysAgo: 1 },
+            { id: 102, scope: 'GLOBAL', type: 'FIRE', name: 'ABD / Kaliforniya Sierra Nevada', lat: 37.8651, lon: -119.5383, desc: '12.000 dönüm ormanlık alan etkilendi.', risk: 'Kritik', color: '#EF4444', daysAgo: 1 },
             { id: 103, scope: 'GLOBAL', type: 'FLOOD', name: 'İspanya / Valensiya DANA Siklonu', lat: 39.4699, lon: -0.3763, desc: 'Nehir taştı, metrekareye 200mm yağış.', risk: 'Kritik', color: '#0284C7' }
         ];
 
         let currentScope = 'TR';
         let currentType = 'ALL';
+        let currentDays = 1;
         let searchQuery = '';
         let currentPage = 1;
         const pageSize = 5;
@@ -547,7 +548,8 @@
                 const matchSearch = searchQuery === '' ||
                     i.name.toLowerCase().includes(searchQuery) ||
                     i.desc.toLowerCase().includes(searchQuery);
-                return matchScope && matchType && matchSearch;
+                const matchTime = (i.daysAgo || 1) <= currentDays;
+                return matchScope && matchType && matchSearch && matchTime;
             });
         }
 
