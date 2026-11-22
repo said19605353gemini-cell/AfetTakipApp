@@ -1,810 +1,654 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">`r`n  <meta name="color-scheme" content="dark">
-  <title>Afet Radar - Canlı Orman Yangını ve Sel Takibi</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Afet Radar Mobil</title>
+    <meta name="theme-color" content="#0B1120">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  <style>
-    :root {
-      color-scheme: dark;
-      --bg: #090e17;
-      --card-bg: rgba(20, 28, 48, 0.85);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --fire: #ef4444;
-      --flood: #0284c7;
-      --safe-top: env(safe-area-inset-top, 24px);
-      --safe-bottom: env(safe-area-inset-bottom, 24px);
-    }
+        html, body {
+            background-color: #0B1120;
+            color: #F8FAFC;
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
+        body {
+            display: flex;
+            justify-content: center;
+        }
 
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background-color: var(--bg);
-      background-image: 
-        radial-gradient(at 0% 0%, rgba(239, 68, 68, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(2, 132, 199, 0.15) 0px, transparent 50%);
-      background-attachment: fixed;
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      padding-top: var(--safe-top);
-      padding-bottom: calc(var(--safe-bottom) + 30px);
-    }
+        .app-shell {
+            width: 100%;
+            max-width: 600px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: #0B1120;
+            padding-bottom: 75px;
+            overflow-x: hidden;
+        }
 
-    .container {
-      width: 100%;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.96);
+            backdrop-filter: blur(12px);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #1E293B;
+            width: 100%;
+        }
 
-    /* Top Brand & Clocks */
-    .header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
 
-    .app-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+        .header-badge {
+            background: #EF4444;
+            color: white;
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+        }
 
-    .brand-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #ef4444, #0284c7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
-    }
+        .header-text h1 {
+            font-size: 15px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
 
-    .brand-title {
-      font-size: 19px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-    }
+        .header-text p {
+            font-size: 11px;
+            color: #F87171;
+            font-weight: 600;
+        }
 
-    .brand-sub {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-    .dual-clock {
-      display: flex;
-      gap: 6px;
-    }
+        .btn-refresh {
+            background: #1E293B;
+            border: 1px solid #334155;
+            color: #F87171;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
-    .clock-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 5px 8px;
-      text-align: right;
-    }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 12px 16px 6px 16px;
+            width: 100%;
+        }
 
-    .clock-lbl {
-      font-size: 9px;
-      color: var(--text-muted);
-      font-weight: 700;
-    }
+        .stat-card {
+            background: #1E293B;
+            border-radius: 10px;
+            padding: 8px 6px;
+            border: 1px solid #334155;
+            text-align: center;
+            min-width: 0;
+        }
 
-    .clock-val {
-      font-size: 12px;
-      font-weight: 800;
-      color: #ef4444;
-    }
+        .stat-title {
+            font-size: 9px;
+            color: #94A3B8;
+            font-weight: 700;
+            text-transform: uppercase;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-    /* Scope Tabs */
-    .scope-tabs {
-      display: flex;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      border-radius: 14px;
-      padding: 4px;
-      gap: 4px;
-    }
+        .stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
 
-    .scope-btn {
-      flex: 1;
-      padding: 9px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-muted);
-      border: none;
-      background: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      transition: all 0.2s;
-    }
+        .filter-section {
+            padding: 8px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
 
-    .scope-btn.active {
-      background: #ef4444;
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
-    }
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            padding: 8px 12px;
+            width: 100%;
+        }
 
-    /* Summary Stats - 100% Responsive Grid (Kutucuklar asla sağa kaymaz, tam kutulanır) */
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+        .search-box input {
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #FFF;
+            width: 100%;
+            font-size: 13px;
+            margin-left: 8px;
+        }
 
-    @media (min-width: 520px) {
-      .stats-row {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-    }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
 
-    .stat-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 10px 6px;
-      text-align: center;
-      backdrop-filter: blur(12px);
-      min-width: 0;
-      width: 100%;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
+        .filter-group-title {
+            font-size: 10px;
+            color: #64748B;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
-    .stat-val {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.2;
-      margin-bottom: 2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
+        .filter-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            width: 100%;
+        }
 
-    .stat-lbl {
-      font-size: 10px;
-      color: var(--text-muted);
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
-    }
+        .pill {
+            padding: 5px 11px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #1E293B;
+            color: #94A3B8;
+            border: 1px solid #334155;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.15s ease;
+        }
 
-    /* Leaflet Map */
-    .map-box {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 20px;
-      padding: 10px;
-      backdrop-filter: blur(12px);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+        .pill.active {
+            background: #EF4444;
+            color: #FFF;
+            border-color: #EF4444;
+            font-weight: 700;
+        }
 
-    #map {
-      width: 100%;
-      height: 220px;
-      border-radius: 14px;
-      z-index: 10;
-    }
+        .eq-list {
+            padding: 8px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+        }
 
-    /* Time Range Tabs (DepremTakipGui: 24s, 7G, 30G, 90G, 1 Sene, 3 Sene) */
-        .time-scroll {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 6px;
-      width: 100%;
-      box-sizing: border-box;
-    }
+        .eq-card {
+            background: #1E293B;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            cursor: pointer;
+        }
 
-    .time-pill {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      border-radius: 8px;
-      padding: 8px 4px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--text-muted);
-      cursor: pointer;
-      text-align: center;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
+        .eq-card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
 
-    .time-pill.active {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: #ef4444;
-      color: #ef4444;
-    }
+        .eq-badge {
+            width: 48px;
+            height: 48px;
+            min-width: 48px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+        }
 
-    /* Filter Card */
-    .filter-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .eq-badge .mag {
+            font-size: 18px;
+            line-height: 1;
+        }
 
-    .search-box {
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
+        .eq-badge .type {
+            font-size: 8px;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-top: 2px;
+        }
 
-    .search-box input {
-      width: 100%;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      border-radius: 12px;
-      padding: 10px 12px 10px 38px;
-      color: #fff;
-      font-size: 14px;
-      outline: none;
-      font-family: inherit;
-    }
+        .eq-info {
+            flex: 1;
+            min-width: 0;
+        }
 
-    .search-box i {
-      position: absolute;
-      left: 12px;
-      color: var(--text-muted);
-    }
+        .eq-location {
+            font-size: 14px;
+            font-weight: 700;
+            color: #F8FAFC;
+            line-height: 1.3;
+        }
 
-    .filter-row {
-      display: flex;
-      gap: 8px;
-    }
+        .eq-sub {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: #94A3B8;
+            flex-wrap: wrap;
+        }
 
-    .filter-select {
-      flex: 1;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      padding: 8px 10px;
-      color: #fff;
-      font-size: 12px;
-      font-weight: 600;
-      outline: none;
-      font-family: inherit;
-    }
+        .eq-country-tag {
+            background: #334155;
+            color: #F87171;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+        }
 
-    /* Incident List */
-    .incident-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .eq-details {
+            display: none;
+            padding-top: 8px;
+            border-top: 1px dashed #334155;
+            font-size: 12px;
+            color: #CBD5E1;
+            line-height: 1.5;
+        }
 
-    .incident-card {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 18px;
-      padding: 14px 16px;
-      backdrop-filter: blur(12px);
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      position: relative;
-      cursor: pointer;
-      overflow: hidden;
-      transition: all 0.2s;
-    }
+        .eq-card.expanded .eq-details {
+            display: block;
+        }
 
-    .incident-card:active {
-      transform: scale(0.99);
-    }
+        nav.bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            height: 56px;
+            background: rgba(15, 23, 42, 0.98);
+            border-top: 1px solid #1E293B;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
 
-    .incident-card::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 5px;
-      background: var(--card-theme, #ef4444);
-    }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: #64748B;
+            font-size: 11px;
+            cursor: pointer;
+        }
 
-    .inc-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+        .nav-item.active {
+            color: #EF4444;
+        }
 
-    .inc-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.08);
-    }
+        #map-view {
+            display: none;
+            position: fixed;
+            top: 58px;
+            bottom: 56px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            z-index: 500;
+        }
 
-    .inc-risk {
-      font-size: 11px;
-      font-weight: 800;
-    }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
 
-    .inc-chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
+        .leaflet-container { background: #0B1120 !important; }
 
-    .inc-chip {
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 8px;
-      padding: 4px 8px;
-      font-size: 11px;
-      color: #cbd5e1;
-    }
+        .pagination-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 16px 14px 20px 14px;
+            width: 100%;
+        }
 
-    .accordion-body {
-      display: none;
-      flex-direction: column;
-      gap: 6px;
-      padding-top: 10px;
-      margin-top: 4px;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-      font-size: 12px;
-      color: #cbd5e1;
-    }
+        .page-btn {
+            min-width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #1E293B;
+            color: #94A3B8;
+            border: 1px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
 
-    .incident-card.expanded .accordion-body {
-      display: flex;
-    }
-
-    /* Pagination */
-    .pagination-bar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .page-btn {
-      background: var(--card-bg);
-      border: 1px solid var(--card-border);
-      border-radius: 10px;
-      min-width: 38px;
-      height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .page-btn.active {
-      background: #ef4444;
-      color: #fff;
-      border-color: #ef4444;
-    }
-      /* Option text color fix: Windows beyaz pop-up açtığı için option metinleri daima koyu/siyah ve net görünür */
-    select option {
-      background-color: #ffffff !important;
-      color: #0f172a !important;
-      font-weight: 700 !important;
-      font-size: 13px !important;
-      padding: 10px !important;
-    }
-
-    select option:checked {
-      background-color: #3b82f6 !important;
-      color: #ffffff !important;
-    }
-      /* Harita Koyu Mod Efekti (API Key İstemez) */
-    /* Esri Native Dark Canvas */
-    .leaflet-container { background: #0b0f19 !important; }
-  </style>
+        .page-btn.active {
+            background: #EF4444;
+            color: #FFF;
+            border-color: #EF4444;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="container">
-    
-    <!-- Top Header with Dual Clocks -->
-    <div class="header-bar">
-      <div class="app-brand">
-        <div class="brand-icon">
-          <i data-lucide="flame" style="width: 24px; height: 24px;"></i>
-        </div>
-        <div>
-          <div class="brand-title">Afet Radar</div>
-          <div class="brand-sub">Canlı Yangın ve Sel İzleme</div>
-        </div>
-      </div>
-      <div class="dual-clock">
-        <div class="clock-box">
-          <div class="clock-lbl">TR Saati</div>
-          <div class="clock-val" id="trClock">--:--:--</div>
-        </div>
-        <div class="clock-box">
-          <div class="clock-lbl">UTC Saati</div>
-          <div class="clock-val" id="utcClock">--:--:--</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scope Switcher: Türkiye / Global -->
-    <div class="scope-tabs">
-      <button class="scope-btn active" data-scope="TR">
-        <span>🇹🇷</span> Türkiye Geneli
-      </button>
-      <button class="scope-btn" data-scope="GLOBAL">
-        <span>🌐</span> Uluslararası / Global
-      </button>
-    </div>
-
-    <!-- Summary Stats (4 Kutulu DepremTakipGui Standardı) -->
-    <div class="stats-row">
-      <div class="stat-card">
-        <div class="stat-val" style="color: var(--fire);" id="countFire">0</div>
-        <div class="stat-lbl">Orman Yangını</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color: var(--flood);" id="countFlood">0</div>
-        <div class="stat-lbl">Sel & Taşkın</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color: #ef4444;" id="countCritical">0</div>
-        <div class="stat-lbl">Kritik Risk</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" style="color: #10b981;" id="countControl">0</div>
-        <div class="stat-lbl">Kontrol Altında</div>
-      </div>
-    </div>
-
-    <!-- Live Map -->
-    <div class="map-box">
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 2px 4px;">
-        <span style="font-size: 13px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="map" style="width: 15px; height: 15px; color: #ef4444;"></i> Canlı Yangın & Sel Haritası
-        </span>
-        <span style="font-size: 11px; color: #10b981; font-weight: 600;">● Canlı Uydu Verisi</span>
-      </div>
-      <div id="map"></div>
-    </div>
-
-    <!-- Time Range Tabs (DepremTakipGui: 24s, 7G, 30G, 90G, 1 Sene, 3 Sene) -->
-    <div style="font-size: 12px; font-weight: 700; color: #94a3b8; margin-top: 2px;">
-      Tarihsel Dönem & Arşiv:
-    </div>
-    <div class="time-scroll">
-      <div class="time-pill active" data-days="1">Son 24 Saat</div>
-      <div class="time-pill" data-days="7">Son 7 Gün</div>
-      <div class="time-pill" data-days="30">Son 30 Gün</div>
-      <div class="time-pill" data-days="90">Son 90 Gün</div>
-      <div class="time-pill" data-days="365">1 Sene (Arşiv)</div>
-      <div class="time-pill" data-days="1095">3 Sene (Tarihsel)</div>
-    </div>
-
-    <!-- Controls: Filter & Sort -->
-    <div class="filter-card">
-      <div class="search-box">
-        <i data-lucide="search" style="width: 18px; height: 18px;"></i>
-        <input type="text" id="searchInput" placeholder="Bölge, il veya afet türü ara (Muğla, Rize, Rodos)...">
-      </div>
-      <div class="filter-row">
-        <select class="filter-select" id="sortSelect">
-          <option value="time_desc">⏱️ En Yeni Olaylar</option>
-          <option value="risk_desc">⚠️ En Yüksek Risk Seviyesi</option>
-          <option value="name_asc">🔤 Konum Sırası (A - Z)</option>
-        </select>
-        <select class="filter-select" id="typeSelect">
-          <option value="ALL">Tüm Afetler (Yangın & Sel)</option>
-          <option value="FIRE">Sadece Orman Yangınları</option>
-          <option value="FLOOD">Sadece Sel ve Taşkınlar</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- Results Counter -->
-    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 4px;">
-      <span style="font-size: 15px; font-weight: 700; color: #fff;">Güncel Olaylar</span>
-      <span style="font-size: 11px; color: var(--text-muted);" id="incidentCount">0 olay</span>
-    </div>
-
-    <!-- Incident List -->
-    <div class="incident-list" id="incidentList"></div>
-
-    <!-- Pagination -->
-    <div class="pagination-bar" id="paginationBar"></div>
-
-  </div>
-
-  <script>
-    // Dual Time
-    function updateClocks() {
-      const now = new Date();
-      document.getElementById('trClock').textContent = now.toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
-      document.getElementById('utcClock').textContent = now.toLocaleTimeString('en-GB', { timeZone: 'UTC' });
-    }
-    setInterval(updateClocks, 1000);
-    updateClocks();
-
-    // Data Store
-    const incidents = [
-      // TR
-      { id: 1, scope: 'TR', type: 'FIRE', name: 'Muğla / Marmaris Kızılçam Ormanı', lat: 36.8550, lon: 28.2740, desc: 'Rüzgarın etkisiyle başlayan yangına helikopter ve arazözlerle yoğun müdahale ediliyor.', risk: 'Kritik', status: 'Müdahale Sürüyor', time: '1 saat önce', color: '#ef4444' },
-      { id: 2, scope: 'TR', type: 'FIRE', name: 'Antalya / Manavgat Kırsalı', lat: 36.7867, lon: 31.4422, desc: 'Örtü altı yangını soğutma ve çevreleme çalışmaları başarıyla tamamlandı.', risk: 'Orta', status: 'Kontrol Altında', time: '3 saat önce', color: '#f59e0b' },
-      { id: 3, scope: 'TR', type: 'FLOOD', name: 'Rize / Çamlıhemşin Deresi', lat: 41.0450, lon: 41.0020, desc: 'Kuvvetli sağanak yağış sonrası dere debisi yükseldi, tahliye çalışmaları yürütülüyor.', risk: 'Kritik', status: 'Taşkın Alarmı', time: '45 dk önce', color: '#0284c7' },
-      { id: 4, scope: 'TR', type: 'FLOOD', name: 'Giresun / Dereli Deresi', lat: 40.7380, lon: 38.4550, desc: 'Metrekareye 85kg yağış düştü. Kırsal yollarda taşkın ve toprak kayması uyarısı.', risk: 'Kritik', status: 'Tahliye Başlatıldı', time: '2 saat önce', color: '#0284c7' },
-      { id: 5, scope: 'TR', type: 'FIRE', name: 'İzmir / Menderes Makilik', lat: 38.2500, lon: 27.1333, desc: 'Kuvvetli poyraz sebebiyle çıkan alevler ekiplerce çevrelendi.', risk: 'Orta', status: 'Kontrol Altında', time: '5 saat önce', color: '#f59e0b' },
-
-      // Global
-      { id: 101, scope: 'GLOBAL', type: 'FIRE', name: 'Yunanistan / Rodos Adası Ormanları', lat: 36.1700, lon: 27.9200, desc: 'Akdeniz sıcak hava dalgası yangını körüklüyor. Turistik bölgeler tahliye edildi.', risk: 'Kritik', status: 'Genişliyor', time: '2 saat önce', color: '#ef4444' },
-      { id: 102, scope: 'GLOBAL', type: 'FIRE', name: 'ABD / Kaliforniya Sierra Nevada', lat: 37.8651, lon: -119.5383, desc: 'Yıldırım kaynaklı orman yangını. 12.000 dönüm ormanlık alan etkilendi.', risk: 'Kritik', status: 'Hava Desteği Sürüyor', time: '4 saat önce', color: '#ef4444' },
-      { id: 103, scope: 'GLOBAL', type: 'FLOOD', name: 'İspanya / Valensiya Nehir Yatağı', lat: 39.4699, lon: -0.3763, desc: 'Akdeniz DANA siklonu sonrası nehir yatakları taştı, metrekareye 200mm yağış düştü.', risk: 'Kritik', status: 'Kırmızı Alarm', time: '1 saat önce', color: '#0284c7' },
-      { id: 104, scope: 'GLOBAL', type: 'FLOOD', name: 'Almanya / Ren-Vestfalya Nehir Havzası', lat: 51.2277, lon: 6.7735, desc: 'Nehir debisi kritik eşiği aştı. Mobil taşkın bariyerleri yerleştirildi.', risk: 'Orta', status: 'Önlemler Alındı', time: '6 saat önce', color: '#0284c7' },
-      { id: 105, scope: 'GLOBAL', type: 'FIRE', name: 'Kanada / British Columbia Boreal', lat: 53.7267, lon: -127.6476, desc: 'Boreal orman kuşağında devam eden kontrolsüz yangınlar yoğun duman oluşturuyor.', risk: 'Kritik', status: 'Müdahale Ediliyor', time: 'Bugün', color: '#ef4444' }
-    ];
-
-    let currentScope = 'TR';
-    let searchQuery = '';
-    let sortMode = 'time_desc';
-    let selectedType = 'ALL';
-    let selectedDays = 1;
-    let currentPage = 1;
-    const pageSize = 5;
-
-    let map = null;
-    let markersLayer = null;
-
-    function initMap() {
-      map = L.map('map', { attributionControl: false }).setView([39.0, 35.0], 5);
-      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 }).addTo(map);
-      markersLayer = L.layerGroup().addTo(map);
-      updateMap();
-    }
-
-    function updateMap() {
-      if (!markersLayer) return;
-      markersLayer.clearLayers();
-
-      const items = getFilteredData();
-      items.forEach(item => {
-        const marker = L.circleMarker([item.lat, item.lon], {
-          radius: 9,
-          fillColor: item.color,
-          color: '#ffffff',
-          weight: 1.5,
-          opacity: 1,
-          fillOpacity: 0.85
-        });
-
-        marker.bindPopup(`
-          <div style="font-family: inherit; font-size: 13px; color: #0f172a;">
-            <strong style="color: ${item.color};">${item.type === 'FIRE' ? '🔥 YANGIN' : '🌊 SEL'}</strong><br>
-            <strong>${item.name}</strong><br>
-            <span style="font-size: 11px;">${item.desc}</span><br>
-            <span style="font-size: 11px; color: #64748b;">Risk: ${item.risk} (${item.status})</span>
-          </div>
-        `);
-        markersLayer.addLayer(marker);
-      });
-
-      if (currentScope === 'TR') {
-        map.setView([39.0, 35.0], 5);
-      } else {
-        map.setView([35.0, 10.0], 2);
-      }
-    }
-
-    function getFilteredData() {
-      return incidents.filter(item => {
-        const matchScope = item.scope === currentScope;
-        const matchType = selectedType === 'ALL' || item.type === selectedType;
-        const matchSearch = searchQuery === '' || 
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.desc.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchScope && matchType && matchSearch;
-      }).sort((a, b) => {
-        if (sortMode === 'risk_desc') return (b.risk === 'Kritik' ? 1 : 0) - (a.risk === 'Kritik' ? 1 : 0);
-        if (sortMode === 'name_asc') return a.name.localeCompare(b.name);
-        return b.id - a.id;
-      });
-    }
-
-    // Animate Counting (Kutucukların Otomatik Dolması)
-    function animateValue(id, target) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const current = parseInt(el.textContent) || 0;
-      if (current === target) return;
-      const duration = 400;
-      const startTime = performance.now();
-
-      function update(now) {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const ease = 1 - Math.pow(1 - progress, 3);
-        const val = Math.round(current + (target - current) * ease);
-        el.textContent = val;
-        if (progress < 1) requestAnimationFrame(update);
-        else el.textContent = target;
-      }
-      requestAnimationFrame(update);
-    }
-
-    function renderUI() {
-      const filtered = getFilteredData();
-      document.getElementById('incidentCount').textContent = `${filtered.length} olay listelendi`;
-
-      // 4 Kutucuk filtrelere göre otomatik sayar
-      const fire = filtered.filter(i => i.type === 'FIRE').length;
-      const flood = filtered.filter(i => i.type === 'FLOOD').length;
-      const critical = filtered.filter(i => i.risk === 'Kritik').length;
-      const control = filtered.filter(i => i.status.includes('Kontrol') || i.status.includes('Önlem')).length;
-
-      animateValue('countFire', fire);
-      animateValue('countFlood', flood);
-      animateValue('countCritical', critical);
-      animateValue('countControl', control);
-
-      // Pagination
-      const totalPages = Math.ceil(filtered.length / pageSize) || 1;
-      if (currentPage > totalPages) currentPage = totalPages;
-      const start = (currentPage - 1) * pageSize;
-      const pageItems = filtered.slice(start, start + pageSize);
-
-      const listContainer = document.getElementById('incidentList');
-      listContainer.innerHTML = '';
-
-      pageItems.forEach(item => {
-        const card = document.createElement('div');
-        card.className = 'incident-card';
-        card.style.setProperty('--card-theme', item.color);
-        
-        card.innerHTML = `
-          <div class="inc-top">
-            <div class="inc-badge" style="color: ${item.color};">
-              <i data-lucide="${item.type === 'FIRE' ? 'flame' : 'waves'}" style="width: 14px; height: 14px;"></i>
-              ${item.type === 'FIRE' ? 'ORMAN YANGINI' : 'SEL & TAŞKIN'}
+    <div class="app-shell">
+        <header>
+            <div class="header-title">
+                <div class="header-badge">🔥</div>
+                <div class="header-text">
+                    <h1>AFET RADAR</h1>
+                    <p id="clock-display">TR: --:-- | UTC: --:--</p>
+                </div>
             </div>
-            <span class="inc-risk" style="color: ${item.risk === 'Kritik' ? '#ef4444' : '#f59e0b'};">
-              Risk: ${item.risk}
-            </span>
-          </div>
-          <div style="font-size: 15px; font-weight: 700; color: #fff;">${item.name}</div>
-          <div style="font-size: 12px; color: #cbd5e1; line-height: 1.4;">${item.desc}</div>
-          <div class="inc-chips">
-            <span class="inc-chip">⏱️ ${item.time}</span>
-            <span class="inc-chip">🛡️ Durum: ${item.status}</span>
-            <span class="inc-chip">📅 ${selectedDays === 1 ? 'Anlık' : selectedDays + ' Günlük Arşiv'}</span>
-          </div>
-          <div class="accordion-body">
-            <div>Koordinat: <strong>${item.lat}, ${item.lon}</strong></div>
-            <div style="font-size: 11px; color: #ef4444;">Haritada olaya odaklanmak ve uydu görüntüsünü incelemek için dokunun.</div>
-          </div>
-        `;
+            <div class="header-actions">
+                <button class="btn-refresh" onclick="renderAll()">🔄 Yenile</button>
+            </div>
+        </header>
 
-        card.addEventListener('click', () => {
-          card.classList.toggle('expanded');
-          map.setView([item.lat, item.lon], 9);
-        });
+        <main id="list-view">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-title">Toplam Olay</div>
+                    <div class="stat-val" id="statTotal" style="color: #38BDF8;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Orman Yangını</div>
+                    <div class="stat-val" id="statFire" style="color: #F87171;">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-title">Sel & Taşkın</div>
+                    <div class="stat-val" id="statFlood" style="color: #38BDF8;">0</div>
+                </div>
+            </div>
 
-        listContainer.appendChild(card);
-      });
+            <div class="filter-section">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="searchInput" placeholder="Bölge veya afet türü ara..." oninput="applyFilters()">
+                </div>
 
-      renderPagination(totalPages);
-      updateMap();
-      lucide.createIcons();
-    }
+                <div class="filter-group">
+                    <div class="filter-wrap">
+                        <div class="pill active" id="pill-tr" onclick="setScope('TR', this)">🇹🇷 Türkiye Olayları</div>
+                        <div class="pill" id="pill-global" onclick="setScope('GLOBAL', this)">🌐 Küresel Afetler</div>
+                    </div>
+                </div>
 
-    function renderPagination(totalPages) {
-      const container = document.getElementById('paginationBar');
-      container.innerHTML = '';
-      if (totalPages <= 1) return;
+                <div class="filter-group">
+                    <span class="filter-group-title">Tür Seçimi:</span>
+                    <div class="filter-wrap">
+                        <div class="pill active" onclick="setType('ALL', this)">Tümü</div>
+                        <div class="pill" onclick="setType('FIRE', this)">🔥 Yangın</div>
+                        <div class="pill" onclick="setType('FLOOD', this)">🌊 Sel</div>
+                    </div>
+                </div>
 
-      const prevBtn = document.createElement('button');
-      prevBtn.className = 'page-btn';
-      prevBtn.textContent = '◀';
-      prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderUI(); } };
-      container.appendChild(prevBtn);
+                <div class="filter-group">
+                    <span class="filter-group-title">Tarih Aralığı:</span>
+                    <div class="filter-wrap">
+                        <div class="pill active" onclick="setTimeRange(1, this)">24 Saat</div>
+                        <div class="pill" onclick="setTimeRange(7, this)">7 Gün</div>
+                        <div class="pill" onclick="setTimeRange(30, this)">30 Gün</div>
+                        <div class="pill" onclick="setTimeRange(90, this)">90 Gün</div>
+                        <div class="pill" onclick="setTimeRange(365, this)">1 Sene</div>
+                    </div>
+                </div>
+            </div>
 
-      for (let p = 1; p <= totalPages; p++) {
-        const btn = document.createElement('button');
-        btn.className = `page-btn ${p === currentPage ? 'active' : ''}`;
-        btn.textContent = p;
-        btn.onclick = () => { currentPage = p; renderUI(); };
-        container.appendChild(btn);
-      }
+            <div class="eq-list" id="cardList"></div>
+            <div class="pagination-container" id="pagination"></div>
+        </main>
 
-      const nextBtn = document.createElement('button');
-      nextBtn.className = 'page-btn';
-      nextBtn.textContent = '▶';
-      nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; renderUI(); } };
-      container.appendChild(nextBtn);
-    }
+        <div id="map-view">
+            <div id="map"></div>
+        </div>
 
-    // Handlers
-    document.querySelectorAll('.scope-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.scope-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentScope = btn.dataset.scope;
-        currentPage = 1;
-        renderUI();
-      });
-    });
+        <nav class="bottom-nav">
+            <div class="nav-item active" id="nav-list" onclick="switchTab('list')">
+                <span style="font-size: 18px;">📋</span>
+                <span>Liste</span>
+            </div>
+            <div class="nav-item" id="nav-map" onclick="switchTab('map')">
+                <span style="font-size: 18px;">🗺️</span>
+                <span>Harita</span>
+            </div>
+        </nav>
+    </div>
 
-    document.querySelectorAll('.time-pill').forEach(pill => {
-      pill.addEventListener('click', () => {
-        document.querySelectorAll('.time-pill').forEach(p => p.classList.remove('active'));
-        pill.classList.add('active');
-        selectedDays = parseInt(pill.dataset.days);
-        renderUI();
-      });
-    });
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const tr = now.toLocaleTimeString('tr-TR', { timeZone: 'Europe/Istanbul' });
+            const utc = now.toLocaleTimeString('en-GB', { timeZone: 'UTC' });
+            document.getElementById('clock-display').textContent = `TR: ${tr} | UTC: ${utc}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-    document.getElementById('searchInput').addEventListener('input', (e) => {
-      searchQuery = e.target.value.trim();
-      currentPage = 1;
-      renderUI();
-    });
+        const incidents = [
+            { id: 1, scope: 'TR', type: 'FIRE', name: 'Muğla / Marmaris Kızılçam Ormanı', lat: 36.8550, lon: 28.2740, desc: 'Müdahale sürüyor, helikopter desteği var.', risk: 'Kritik', color: '#EF4444' },
+            { id: 2, scope: 'TR', type: 'FIRE', name: 'Antalya / Manavgat Kırsalı', lat: 36.7867, lon: 31.4422, desc: 'Soğutma tamamlandı, kontrol altında.', risk: 'Orta', color: '#F59E0B' },
+            { id: 3, scope: 'TR', type: 'FLOOD', name: 'Rize / Çamlıhemşin Deresi', lat: 41.0450, lon: 41.0020, desc: 'Dere debisi yükseldi, taşkın alarmı.', risk: 'Kritik', color: '#0284C7' },
+            { id: 4, scope: 'TR', type: 'FLOOD', name: 'Giresun / Dereli Deresi', lat: 40.7380, lon: 38.4550, desc: 'Metrekareye 85kg yağış, tahliye yapıldı.', risk: 'Kritik', color: '#0284C7' },
+            { id: 101, scope: 'GLOBAL', type: 'FIRE', name: 'Yunanistan / Rodos Adası', lat: 36.1700, lon: 27.9200, desc: 'Akdeniz sıcak hava dalgası yangını körüklüyor.', risk: 'Kritik', color: '#EF4444' },
+            { id: 102, scope: 'GLOBAL', type: 'FIRE', name: 'ABD / Kaliforniya Sierra Nevada', lat: 37.8651, lon: -119.5383, desc: '12.000 dönüm ormanlık alan etkilendi.', risk: 'Kritik', color: '#EF4444' },
+            { id: 103, scope: 'GLOBAL', type: 'FLOOD', name: 'İspanya / Valensiya DANA Siklonu', lat: 39.4699, lon: -0.3763, desc: 'Nehir taştı, metrekareye 200mm yağış.', risk: 'Kritik', color: '#0284C7' }
+        ];
 
-    document.getElementById('sortSelect').addEventListener('change', (e) => {
-      sortMode = e.target.value;
-      currentPage = 1;
-      renderUI();
-    });
+        let currentScope = 'TR';
+        let currentType = 'ALL';
+        let searchQuery = '';
+        let currentPage = 1;
+        const pageSize = 5;
 
-    document.getElementById('typeSelect').addEventListener('change', (e) => {
-      selectedType = e.target.value;
-      currentPage = 1;
-      renderUI();
-    });
+        let map = null;
+        let markerLayer = null;
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initMap();
-      renderUI();
-    });
-  </script>
+        function setScope(scope, el) {
+            document.querySelectorAll('#pill-tr, #pill-global').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            currentScope = scope;
+            currentPage = 1;
+            renderAll();
+        }
+
+        function setType(type, el) {
+            el.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            currentType = type;
+            currentPage = 1;
+            renderAll();
+        }
+
+        function setTimeRange(days, el) {
+            el.parentElement.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            renderAll();
+        }
+
+        function applyFilters() {
+            searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            currentPage = 1;
+            renderAll();
+        }
+
+        function getFiltered() {
+            return incidents.filter(i => {
+                const matchScope = i.scope === currentScope;
+                const matchType = currentType === 'ALL' || i.type === currentType;
+                const matchSearch = searchQuery === '' || 
+                    i.name.toLowerCase().includes(searchQuery) || 
+                    i.desc.toLowerCase().includes(searchQuery);
+                return matchScope && matchType && matchSearch;
+            });
+        }
+
+        function renderAll() {
+            const items = getFiltered();
+
+            document.getElementById('statTotal').textContent = items.length;
+            document.getElementById('statFire').textContent = items.filter(i => i.type === 'FIRE').length;
+            document.getElementById('statFlood').textContent = items.filter(i => i.type === 'FLOOD').length;
+
+            const totalPages = Math.ceil(items.length / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+            const start = (currentPage - 1) * pageSize;
+            const pageItems = items.slice(start, start + pageSize);
+
+            const container = document.getElementById('cardList');
+            container.innerHTML = '';
+
+            pageItems.forEach(i => {
+                const card = document.createElement('div');
+                card.className = 'eq-card';
+                card.innerHTML = `
+                    <div class="eq-card-header">
+                        <div class="eq-badge" style="background: ${i.color};">
+                            <span class="mag">${i.type === 'FIRE' ? '🔥' : '🌊'}</span>
+                            <span class="type">${i.risk}</span>
+                        </div>
+                        <div class="eq-info">
+                            <div class="eq-location">${i.name}</div>
+                            <div class="eq-sub">
+                                <span class="eq-country-tag">${i.type === 'FIRE' ? 'YANGIN' : 'SEL'}</span>
+                                <span>${i.desc}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="eq-details">
+                        <div>Risk Durumu: <strong>${i.risk}</strong></div>
+                        <div>Koordinat: <strong>${i.lat}, ${i.lon}</strong></div>
+                    </div>
+                `;
+                card.onclick = () => card.classList.toggle('expanded');
+                container.appendChild(card);
+            });
+
+            renderPagination(totalPages);
+            updateMapMarkers(items);
+        }
+
+        function renderPagination(totalPages) {
+            const pDiv = document.getElementById('pagination');
+            pDiv.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            const prev = document.createElement('div');
+            prev.className = `page-btn ${currentPage === 1 ? 'disabled' : ''}`;
+            prev.textContent = '◀';
+            prev.onclick = () => { if (currentPage > 1) { currentPage--; renderAll(); } };
+            pDiv.appendChild(prev);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('div');
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => { currentPage = i; renderAll(); };
+                pDiv.appendChild(btn);
+            }
+
+            const next = document.createElement('div');
+            next.className = `page-btn ${currentPage === totalPages ? 'disabled' : ''}`;
+            next.textContent = '▶';
+            next.onclick = () => { if (currentPage < totalPages) { currentPage++; renderAll(); } };
+            pDiv.appendChild(next);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            if (tab === 'list') {
+                document.getElementById('nav-list').classList.add('active');
+                document.getElementById('list-view').style.display = 'block';
+                document.getElementById('map-view').style.display = 'none';
+            } else {
+                document.getElementById('nav-map').classList.add('active');
+                document.getElementById('list-view').style.display = 'none';
+                document.getElementById('map-view').style.display = 'block';
+                initMap();
+                setTimeout(() => map.invalidateSize(), 150);
+            }
+        }
+
+        function initMap() {
+            if (map) return;
+            map = L.map('map', { attributionControl: false }).setView([39.0, 35.0], 5);
+            L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 16 }).addTo(map);
+            markerLayer = L.layerGroup().addTo(map);
+            updateMapMarkers(getFiltered());
+        }
+
+        function updateMapMarkers(items) {
+            if (!markerLayer) return;
+            markerLayer.clearLayers();
+            items.forEach(i => {
+                const c = L.circleMarker([i.lat, i.lon], {
+                    radius: 8,
+                    fillColor: i.color,
+                    color: '#fff',
+                    weight: 1.5,
+                    fillOpacity: 0.9
+                }).bindPopup(`<strong>${i.name}</strong><br>${i.desc}`);
+                markerLayer.addLayer(c);
+            });
+        }
+
+        window.onload = () => renderAll();
+    </script>
 </body>
 </html>
