@@ -609,16 +609,41 @@
       });
     }
 
+    // Animate Counting (Kutucukların Otomatik Dolması)
+    function animateValue(id, target) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const current = parseInt(el.textContent) || 0;
+      if (current === target) return;
+      const duration = 400;
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const val = Math.round(current + (target - current) * ease);
+        el.textContent = val;
+        if (progress < 1) requestAnimationFrame(update);
+        else el.textContent = target;
+      }
+      requestAnimationFrame(update);
+    }
+
     function renderUI() {
       const filtered = getFilteredData();
       document.getElementById('incidentCount').textContent = `${filtered.length} olay listelendi`;
 
-      // 4 Stat Box
-      const scopeData = incidents.filter(i => i.scope === currentScope);
-      document.getElementById('countFire').textContent = scopeData.filter(i => i.type === 'FIRE').length;
-      document.getElementById('countFlood').textContent = scopeData.filter(i => i.type === 'FLOOD').length;
-      document.getElementById('countCritical').textContent = scopeData.filter(i => i.risk === 'Kritik').length;
-      document.getElementById('countControl').textContent = scopeData.filter(i => i.status.includes('Kontrol') || i.status.includes('Önlem')).length;
+      // 4 Kutucuk filtrelere göre otomatik sayar
+      const fire = filtered.filter(i => i.type === 'FIRE').length;
+      const flood = filtered.filter(i => i.type === 'FLOOD').length;
+      const critical = filtered.filter(i => i.risk === 'Kritik').length;
+      const control = filtered.filter(i => i.status.includes('Kontrol') || i.status.includes('Önlem')).length;
+
+      animateValue('countFire', fire);
+      animateValue('countFlood', flood);
+      animateValue('countCritical', critical);
+      animateValue('countControl', control);
 
       // Pagination
       const totalPages = Math.ceil(filtered.length / pageSize) || 1;
