@@ -1,0 +1,6 @@
+{
+  "appId": "com.afettakip.app",
+  "appName": "AfetRadar",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
